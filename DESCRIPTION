@@ -1,7 +1,7 @@
 Package: snSMART
 Type: Package
 Title: Small N Sequential Multiple Assignment Randomized Trial Methods
-Version: 0.1.0
+Version: 0.2.1
 Authors@R: c(
     person(given = "Sidi", family = "Wang", role = c("aut"), email = "sidiwang@umich.edu"),
     person(given = "Kelley", family = "Kidwell", role = c("aut"), email = "kidwell@umich.edu"),
@@ -26,9 +26,9 @@ LazyData: true
 Biarch: true
 RoxygenNote: 7.2.1
 NeedsCompilation: no
-Packaged: 2022-08-25 13:47:52 UTC; mk
+Packaged: 2022-10-05 17:16:22 UTC; mk
 Author: Sidi Wang [aut],
   Kelley Kidwell [aut],
   Michael Kleinsasser [cre]
 Repository: CRAN
-Date/Publication: 2022-08-26 08:30:02 UTC
+Date/Publication: 2022-10-06 16:10:02 UTC

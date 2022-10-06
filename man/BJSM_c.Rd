@@ -3,6 +3,7 @@
 \name{BJSM_c}
 \alias{BJSM_c}
 \alias{summary.BJSM_c}
+\alias{print.summary.BJSM_c}
 \alias{print.BJSM_c}
 \title{BJSM continuous (snSMART with three active treatments and a continuous outcome design)}
 \usage{
@@ -15,10 +16,17 @@ BJSM_c(
   n.adapt,
   MCMC_SAMPLE,
   ci = 0.95,
-  n.digits
+  n.digits,
+  thin = 1,
+  BURN.IN = 100,
+  cran_check_option = FALSE,
+  verbose = FALSE,
+  ...
 )
 
 \method{summary}{BJSM_c}(object, ...)
+
+\method{print}{summary.BJSM_c}(x, ...)
 
 \method{print}{BJSM_c}(x, ...)
 }
@@ -42,26 +50,36 @@ Please check the \code{Details} section for more explaination}
 
 \item{n_MCMC_chain}{number of MCMC chains, default to 1}
 
-\item{n.adapt}{the number of iterations for adaptation. If \code{n.adapt = 0}
-then no adaptation takes place}
+\item{n.adapt}{the number of iterations for adaptation}
 
 \item{MCMC_SAMPLE}{number of iterations for MCMC}
 
 \item{ci}{coverage probability for credible intervals, default = 0.95}
 
-\item{n.digits}{number of digits to keep in the final estimation of treatment
-effect}
+\item{n.digits}{number of digits to keep in the final estimation of treatment effect}
 
-\item{object}{object to summarize.}
+\item{thin}{thinning interval for monitors}
+
+\item{BURN.IN}{number of burn-in iterations for MCMC}
+
+\item{cran_check_option}{TRUE or FALSE. If FALSE, the algorithm will fit a
+model like usual. This should be the default for all model fitting.
+If TRUE, the model fitting is bypassed to pass CRAN check.}
+
+\item{verbose}{TRUE or FALSE. If FALSE, no function message and progress bar will be
+printed.}
 
 \item{...}{further arguments. Not currently used.}
 
-\item{x}{object to summarize.}
+\item{object}{object to summarize.}
+
+\item{x}{object to print}
 }
 \value{
 \describe{
-\item{posterior_sample}{posterior samples of the link parameters and response
-rates generated through the MCMC process}
+\item{posterior_sample}{an \code{mcmc.list} object generated through the \code{coda.samples()} function,
+which includes posterior samples of the link parameters and response rates generated through the MCMC
+process}
 \item{mean_estimate}{BJSM estimate of each parameter:
 \enumerate{
 \item \code{phi1} - lingering effect of the first treatment
@@ -87,11 +105,13 @@ description of the assumptions and prior distributions of the model.
 Note that this package does not include the JAGS library, users need to install JAGS separately. Please check this page for more details: \url{https://sourceforge.net/projects/mcmc-jags/}
 }
 \examples{
-trialData = trialDataMF
+trialData <- trialDataMF
 
-BJSM_result = BJSM_c(data = trialData, xi_prior.mean = c(50, 50, 50),
-    xi_prior.sd = c(50, 50, 50), phi3_prior.sd = 20, n_MCMC_chain = 1,
-    n.adapt = 1000, MCMC_SAMPLE = 5000, ci = 0.95, n.digits = 5)
+BJSM_result <- BJSM_c(
+  data = trialData, xi_prior.mean = c(50, 50, 50),
+  xi_prior.sd = c(50, 50, 50), phi3_prior.sd = 20, n_MCMC_chain = 1,
+  n.adapt = 1000, MCMC_SAMPLE = 5000, ci = 0.95, n.digits = 5, verbose = FALSE
+)
 
 summary(BJSM_result)
 print(BJSM_result)
