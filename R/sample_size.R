@@ -24,7 +24,6 @@
 #' @param n a vector with 3 values (`nA`, `nB`, `nC`). `nA` is the prior sample size
 #'  (larger than 0) for treatment A. `nB` is the prior sample size (larger than 0)
 #'  for treatment B. `nC` is the prior sample size (larger than 0) for treatment C
-#' @param test for testing purposes only. Defaults to `FALSE`.
 #' @param verbose TRUE or FALSE. If FALSE, no function message and progress bar will be
 #'  printed.
 #'
@@ -34,24 +33,29 @@
 #' This function may take a few minutes to run
 #'
 #' @return
-#' \describe{
-#'     \item{final_N}{the estimated sample size per arm for this snSMART}
-#'     \item{critical_value}{ critical value based on the provided coverage value}
-#'     \item{grid_result}{for each iteration we calculate \code{l}, where \code{l} belongs to \code{{2 * (pi_(1) - pi_(2)), ..., 0.02, 0.01}}; \code{E(D)}: the mean of the posterior distribution of \code{D},
+#' \item{final_N}{the estimated sample size per arm for this snSMART}
+#' \item{critical_value}{ critical value based on the provided coverage value}
+#' \item{grid_result}{for each iteration we calculate \code{l}, where \code{l} belongs to \code{{2 * (pi_(1) - pi_(2)), ..., 0.02, 0.01}}; \code{E(D)}: the mean of the posterior distribution of \code{D},
 #'     , where \code{D = pi_(1) = pi_(2)}; \code{Var(D)}: the variance of the posterior distribution of \code{D}; \code{N}: the corresponding
 #'     sample size; and \code{power}: the resulting power of this iteration}
 #'
-#' }
 #' @examples
-#' require(EnvStats)
-#'
+#' \dontrun{
+#' library(EnvStats)
+#' # short running time example
 #' sampleSize <- sample_size(
 #'   pi = c(0.7, 0.5, 0.25), beta1 = 1.4, beta0 = 0.5, coverage = 0.9,
-#'   power = 0.8, mu = c(0.65, 0.55, 0.25), n = c(4, 2, 3), test = TRUE
+#'   power = 0.3, mu = c(0.65, 0.55, 0.25), n = c(10, 10, 10)
 #' )
+#' }
 #'
-#' # sampleSize = sample_size(pi = c(0.7, 0.5, 0.25), beta1 = 1.4, beta0 = 0.5, coverage = 0.9,
-#' #    power = 0.8, mu = c(0.65, 0.55, 0.25), n = c(4, 2, 3), test = FALSE)
+#' \donttest{
+#' library(EnvStats)
+#' sampleSize <- sample_size(
+#'   pi = c(0.7, 0.5, 0.25), beta1 = 1.4, beta0 = 0.5, coverage = 0.9,
+#'   power = 0.8, mu = c(0.65, 0.55, 0.25), n = c(4, 2, 3)
+#' )
+#' }
 #'
 #' @references
 #' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2018. A Bayesian analysis of
@@ -72,11 +76,7 @@
 #'
 
 
-sample_size <- function(pi, beta1, beta0, coverage, power, mu, n, test = FALSE, verbose = FALSE) {
-  if (test == TRUE) {
-    return()
-  }
-
+sample_size <- function(pi, beta1, beta0, coverage, power, mu, n, verbose = FALSE) {
   beta_prior_generator <- function(info_level, prior_mean) {
     alpha0 <- prior_mean * info_level
     beta0 <- info_level * (1 - prior_mean)
@@ -313,7 +313,7 @@ sample_size <- function(pi, beta1, beta0, coverage, power, mu, n, test = FALSE, 
 
   sortT <- sort(c(piA, piB, piC))
   if (sortT[-1][1] == sortT[-1][2]) {
-    stop("Top 2 treatments have the same expected response rate, only a unique best treatment is allowed")
+    message("Top 2 treatments have the same expected response rate, only a unique best treatment is allowed")
   }
 
   muA <- mu[1]
@@ -607,7 +607,7 @@ sample_size <- function(pi, beta1, beta0, coverage, power, mu, n, test = FALSE, 
     # message(sample_size_tmp_pair1)
   }
 
-  if (verbose == TRUE){
+  if (verbose == TRUE) {
     close(pb)
   }
 
@@ -645,8 +645,9 @@ summary.sample_size <- function(object, ...) {
 print.summary.sample_size <- function(x, ...) {
   cat("With given settings, the estimated sample size per arm for an snSMART is: ")
   cat(as.numeric(x$final_N))
+  cat("\n")
   cat(paste0("In total ", nrow(x$grid_result), " iterations were taken:\n"))
-  message(x$grid_result)
+  print(x$grid_result)
 }
 
 #' @rdname sample_size

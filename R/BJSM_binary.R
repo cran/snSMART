@@ -49,12 +49,10 @@
 #' @param DTR TRUE or FALSE. If TRUE, will also return the expected response rate of
 #'  dynamic treatment regimens. default = TRUE. Only need to specify this for 3 active
 #'  treatment design.
-#' @param cran_check_option TRUE or FALSE. If FALSE, the algorithm will fit a
-#'  model like usual. This should be the default for all model fitting.
-#'  If TRUE, the model fitting is bypassed to pass CRAN check.
 #' @param verbose TRUE or FALSE. If FALSE, no function message and progress bar will be
 #'  printed.
-#' @param ... optional arguments that are passed to \code{jags.model()} function.
+#' @param jags.model_options a list of optional arguments that are passed to \code{jags.model()} function.
+#' @param coda.samples_options a list of optional arguments that are passed to \code{coda.samples()} function.
 #'
 #' @details
 #' For \code{gamma} distribution, \code{prior.a} is the shape parameter \code{r}, \code{prior.b} is the rate parameter \code{lambda}. For \code{beta} distribution, \code{prior.a} is the shape parameter \code{a}, \code{prior.b} is the shape parameter \code{b}.
@@ -69,11 +67,10 @@
 #'
 #' Note that this package does not include the JAGS library, users need to install JAGS separately. Please check this page for more details: \url{https://sourceforge.net/projects/mcmc-jags/}
 #' @return
-#' \describe{
-#'    \item{posterior_sample}{an \code{mcmc.list} object generated through the \code{coda.samples()} function,
+#' \item{posterior_sample}{an \code{mcmc.list} object generated through the \code{coda.samples()} function,
 #'    which includes posterior samples of the link parameters and response rates generated through the MCMC
 #'    process}
-#'    \item{pi_hat_bjsm}{estimate of response rate/treatment effect}
+#' \item{pi_hat_bjsm}{estimate of response rate/treatment effect}
 #'
 #' \item{se_hat_bjsm}{standard error of the response rate}
 #'
@@ -101,7 +98,7 @@
 #' \item{pi_DTR_se}{standard error for the estimated DTR response rate}
 #'
 #' \item{ci_pi_AB, ci_pi_AC, ci_pi_BA, ci_pi_BC, ci_pi_CA, ci_pi_CB}{x% credible intervals for the estimated DTR response rate}
-#' }
+#'
 #' @importFrom stats update
 #'
 #' @examples
@@ -110,26 +107,30 @@
 #' BJSM_result <- BJSM_binary(
 #'   data = mydata, prior_dist = c("beta", "beta", "pareto"),
 #'   pi_prior = c(0.4, 1.6, 0.4, 1.6, 0.4, 1.6), beta_prior = c(1.6, 0.4, 3, 1),
-#'   n_MCMC_chain = 1, n.adapt = 1000, MCMC_SAMPLE = 20, ci = 0.95,
+#'   n_MCMC_chain = 1, n.adapt = 1000, MCMC_SAMPLE = 2000, ci = 0.95,
 #'   six = TRUE, DTR = TRUE, verbose = FALSE
 #' )
 #'
-#' # BJSM_result2 = BJSM_binary(data = mydata, prior_dist = c("beta", "beta", "pareto"),
-#' #    pi_prior = c(0.4, 1.6, 0.4, 1.6, 0.4, 1.6), beta_prior = c(1.6, 0.4, 3, 1),
-#' #    n_MCMC_chain = 1, n.adapt = 10000, MCMC_SAMPLE = 60, ci = 0.95,
-#' #    six = FALSE, DTR = FALSE, verbose = FALSE)
+#' \donttest{
+#' BJSM_result2 <- BJSM_binary(
+#'   data = mydata, prior_dist = c("beta", "beta", "pareto"),
+#'   pi_prior = c(0.4, 1.6, 0.4, 1.6, 0.4, 1.6), beta_prior = c(1.6, 0.4, 3, 1),
+#'   n_MCMC_chain = 1, n.adapt = 10000, MCMC_SAMPLE = 60000, ci = 0.95,
+#'   six = FALSE, DTR = FALSE, verbose = FALSE
+#' )
 #'
-#' # summary(BJSM_result)
-#' # summary(BJSM_result2)
+#' summary(BJSM_result)
+#' summary(BJSM_result2)
+#' }
 #'
 #' data <- data_dose
 #' BJSM_dose_result <- BJSM_binary(
 #'   data = data_dose, prior_dist = c("beta", "gamma"),
 #'   pi_prior = c(3, 17), normal.par = c(0.2, 100), beta_prior = c(2, 2),
-#'   n_MCMC_chain = 2, n.adapt = 10000, MCMC_SAMPLE = 60, ci = 0.95, verbose = FALSE
+#'   n_MCMC_chain = 2, n.adapt = 1000, MCMC_SAMPLE = 6000, ci = 0.95, verbose = FALSE
 #' )
 #'
-#' # summary(BJSM_dose_result)
+#' summary(BJSM_dose_result)
 #'
 #' @references
 #' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2018. A Bayesian analysis of small n sequential multiple assignment randomized trials (snSMARTs).
@@ -148,17 +149,14 @@
 #' @export
 
 BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MCMC_chain, n.adapt, BURN.IN = 100,
-                        thin = 1, MCMC_SAMPLE, ci = 0.95, six = TRUE, DTR = TRUE, cran_check_option = FALSE, verbose = FALSE, ...) {
-  if (cran_check_option) {
-    return("Model not fitted. Set cran_check_option = FALSE to fit a model.")
-  }
-
-  quiet = FALSE
-  progress.bar = "text"
+                        thin = 1, MCMC_SAMPLE, ci = 0.95, six = TRUE, DTR = TRUE,
+                        jags.model_options = NULL, coda.samples_options = NULL, verbose = FALSE, ...) {
+  quiet <- FALSE
+  progress.bar <- "text"
 
   if (verbose == FALSE) {
-    quiet = TRUE
-    progress.bar = "none"
+    quiet <- TRUE
+    progress.bar <- "none"
   }
   # bug files written to temporary directory on function call to satisfy CRAN
   # requirements of not accessing user's system files
@@ -219,7 +217,8 @@ BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MC
       jag.model.name <- bugfile2_file
       tryCatch(
         {
-          jag <- rjags::jags.model(file.path(jag.model.name),
+          jag <- do.call(rjags::jags.model, c(list(
+            file = file.path(jag.model.name),
             data = list(
               n1 = nrow(mydata),
               n2 = nrow(mydata[!is.na(mydata$response_stageII), ]),
@@ -237,13 +236,14 @@ BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MC
               beta1_prior.a = beta1_prior.a, # pareto
               beta1_prior.c = beta1_prior.c # pareto
             ),
-            n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, ...
-          )
+            n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, jags.model_options
+          )))
           update(jag, BURN.IN, progress.bar = progress.bar)
-          posterior_sample <- rjags::coda.samples(jag,
-            c("pi", "beta"),
-            n.iter = MCMC_SAMPLE, thin = thin, progress.bar = progress.bar
-          )
+          posterior_sample <- do.call(rjags::coda.samples, c(list(
+            model = jag,
+            variable.names = c("pi", "beta"),
+            n.iter = MCMC_SAMPLE, thin = thin, progress.bar = progress.bar, coda.samples_options
+          )))
         },
         warning = function(war) {},
         error = function(err) {},
@@ -265,7 +265,8 @@ BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MC
       jag.model.name <- bugfile2_file
       tryCatch(
         {
-          jag <- rjags::jags.model(file.path(jag.model.name),
+          jag <- do.call(rjags::jags.model, c(list(
+            file = file.path(jag.model.name),
             data = list(
               n1 = nrow(mydata),
               n2 = nrow(mydata[!is.na(mydata$response_stageII), ]),
@@ -283,13 +284,14 @@ BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MC
               beta1_prior.a = beta1_prior.a,
               beta1_prior.c = beta1_prior.c
             ),
-            n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, ...
-          )
+            n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, jags.model_options
+          )))
           update(jag, BURN.IN, progress.bar = progress.bar)
-          posterior_sample <- rjags::coda.samples(jag,
-            c("pi", "beta"),
-            n.iter = MCMC_SAMPLE, thin = thin, progress.bar = progress.bar
-          )
+          posterior_sample <- do.call(rjags::coda.samples, c(list(
+            model = jag,
+            variable.names = c("pi", "beta"),
+            n.iter = MCMC_SAMPLE, thin = thin, progress.bar = progress.bar, coda.samples_options
+          )))
         },
         warning = function(war) {},
         error = function(err) {},
@@ -472,7 +474,8 @@ BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MC
     jag.model.name <- bugfile2_file
 
     tryCatch({
-      jag <- rjags::jags.model(file.path(jag.model.name),
+      jag <- do.call(rjags::jags.model, c(list(
+        file = file.path(jag.model.name),
         data = list(
           overall_sample_size = nrow(mydata),
           num_arms = NUM_ARMS,
@@ -490,13 +493,14 @@ BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MC
           normal.mean = normal.mean,
           normal.var = normal.var
         ),
-        n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, ...
-      )
+        n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, jags.model_options
+      )))
       update(jag, BURN.IN, progress.bar = progress.bar)
-      posterior_sample <- rjags::coda.samples(jag,
-        c("pi", "beta"),
-        n.iter = MCMC_SAMPLE, thin = thin, progress.bar = progress.bar
-      )
+      posterior_sample <- do.call(rjags::coda.samples, c(list(
+        model = jag,
+        variable.names = c("pi", "beta"),
+        n.iter = MCMC_SAMPLE, thin = thin, progress.bar = progress.bar, coda.samples_options
+      )))
     })
 
     out_post <- as.data.frame(posterior_sample[[1]])

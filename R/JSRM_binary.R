@@ -13,19 +13,14 @@
 #'  beta model. Default is `six = TRUE`
 #' @param DTR if TRUE, will also return the expected response rate and its standard
 #'  error of dynamic treatment regimens
-#' @param cran_check_option TRUE or FALSE. If FALSE, the algorithm will fit a
-#'  model like usual. This should be the default for all model fitting.
-#'  If TRUE, the model fitting is bypassed to pass CRAN check.
 #' @param ... optional arguments that are passed to \code{geepack::geeglm()} function.
 #'
 #' @return a `list` containing
-#' \itemize{
-#'   \item{`GEE_output`}{ - original output of the GEE (geeglm) model}
-#'   \item{`pi_hat`}{ - estimate of response rate/treatment effect}
-#'   \item{`sd_pi_hat`}{ - standard error of the response rate}
-#'   \item{`pi_DTR_hat`}{ - expected response rate of dynamic treatment regimens (DTRs)}
-#'   \item{`pi_DTR_se`}{ - standard deviation of DTR estimates}
-#' }
+#'  \item{`GEE_output`}{ - original output of the GEE (geeglm) model}
+#'  \item{`pi_hat`}{ - estimate of response rate/treatment effect}
+#'  \item{`sd_pi_hat`}{ - standard error of the response rate}
+#'  \item{`pi_DTR_hat`}{ - expected response rate of dynamic treatment regimens (DTRs)}
+#'  \item{`pi_DTR_se`}{ - standard deviation of DTR estimates}
 #'
 #' @examples
 #' data <- data_binary
@@ -52,10 +47,7 @@
 #' @rdname LPJSM_binary
 #' @export
 #'
-LPJSM_binary <- function(data, six = TRUE, DTR = TRUE, cran_check_option = FALSE, ...) {
-  if (cran_check_option) {
-    return("Model not fitted. Set cran_check_option = FALSE to fit a model.")
-  }
+LPJSM_binary <- function(data, six = TRUE, DTR = TRUE, ...) {
 
   # data, same format as the bjsm_binary.R file trial dataset format
   # six, if TRUE, will run the six beta model, if FALSE will run the two beta model
@@ -162,7 +154,7 @@ LPJSM_binary <- function(data, six = TRUE, DTR = TRUE, cran_check_option = FALSE
     geedata <- geedata[order(geedata$ptid), ]
     rm(ptid, Y, gamma1A, gamma2A, gamma1B, gamma2B, gamma1C, gamma2C, alphaA, alphaB, alphaC, gamma1, gamma2)
     try({
-      mod1 <- geepack::geeglm(Y ~ alphaA + alphaB + alphaC + gamma1 + gamma2 - 1, family = poisson(link = "log"), data = geedata, id = ptid, corstr = "independence")
+      mod1 <- geepack::geeglm(Y ~ alphaA + alphaB + alphaC + gamma1 + gamma2 - 1, family = poisson(link = "log"), data = geedata, id = ptid, corstr = "independence", ...)
       beta_hat <- mod1$coefficients[1:3]
       sd_beta_hat <- summary(mod1)$coef[1:3, 2]
       pi_hat <- exp(beta_hat)

@@ -29,12 +29,10 @@
 #' @param DTR, if TRUE, will also return the expected response rate of dynamic
 #'  treatment regimens. default = TRUE. only assign value to this parameter when
 #'  `interim = FALSE`.
-#' @param cran_check_option TRUE or FALSE. If FALSE, the algorithm will fit a
-#'  model like usual. This should be the default for all model fitting.
-#'  If TRUE, the model fitting is bypassed to pass CRAN check.
 #' @param verbose TRUE or FALSE. If FALSE, no function message and progress bar will be
 #'  printed.
-#' @param ... optional arguments that are passed to \code{jags.model()} function.
+#' @param jags.model_options a list of optional arguments that are passed to \code{jags.model()} function.
+#' @param coda.samples_options a list of optional arguments that are passed to \code{coda.samples()} function.
 #'
 #' @details
 #' For \code{gamma} distribution, \code{prior.a} is the shape parameter \code{r},
@@ -69,10 +67,8 @@
 #'
 #' mydata <- groupseqDATA_full
 #' result2 <- group_seq(
-#'   data = mydata, interim = FALSE, prior_dist = c(
-#'     "beta",
-#'     "beta", "pareto"
-#'   ), pi_prior = c(0.4, 1.6, 0.4, 1.6, 0.4, 1.6),
+#'   data = mydata, interim = FALSE, prior_dist = c("beta", "beta", "pareto"),
+#'   pi_prior = c(0.4, 1.6, 0.4, 1.6, 0.4, 1.6),
 #'   beta_prior = c(1.6, 0.4, 3, 1), MCMC_SAMPLE = 6000, n.adapt = 1000,
 #'   n_MCMC_chain = 1, ci = 0.95, DTR = TRUE
 #' )
@@ -85,11 +81,10 @@
 #'
 #' if `interim = FALSE`, this function returns:
 #'
-#' \describe{
-#'    \item{posterior_sample}{an \code{mcmc.list} object generated through the \code{coda.samples()} function,
+#' \item{posterior_sample}{an \code{mcmc.list} object generated through the \code{coda.samples()} function,
 #'    which includes posterior samples of the link parameters and response rates generated through the MCMC
 #'    process}
-#'    \item{pi_hat_bjsm}{estimate of response rate/treatment effect}
+#' \item{pi_hat_bjsm}{estimate of response rate/treatment effect}
 #'
 #' \item{se_hat_bjsm}{standard error of the response rate}
 #'
@@ -118,8 +113,6 @@
 #'
 #' \item{ci_pi_AB, ci_pi_AC, ci_pi_BA, ci_pi_BC, ci_pi_CA, ci_pi_CB}{x% credible intervals for the estimated DTR response rate}
 #'
-#' }
-#'
 #'
 #' @references
 #' Chao, Y.C., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2020. A Bayesian group
@@ -133,17 +126,15 @@
 #'
 #' @rdname group_seq
 group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_dist, pi_prior,
-                      beta_prior, MCMC_SAMPLE, n.adapt, thin = 1, BURN.IN = 100, n_MCMC_chain, ci = 0.95, DTR = TRUE, cran_check_option = FALSE, verbose = FALSE, ...) {
-  if (cran_check_option) {
-    return("Model not fitted. Set cran_check_option = FALSE to fit a model.")
-  }
-
-  quiet = FALSE
-  progress.bar = "text"
+                      beta_prior, MCMC_SAMPLE, n.adapt, thin = 1, BURN.IN = 100, n_MCMC_chain,
+                      ci = 0.95, DTR = TRUE,
+                      jags.model_options = NULL, coda.samples_options = NULL, verbose = FALSE, ...) {
+  quiet <- FALSE
+  progress.bar <- "text"
 
   if (verbose == FALSE) {
-    quiet = TRUE
-    progress.bar = "none"
+    quiet <- TRUE
+    progress.bar <- "none"
   }
 
   # bug files written to temporary directory on function call to satisfy CRAN
@@ -215,7 +206,8 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
     error_count <- 0
     tryCatch(
       {
-        jags <- rjags::jags.model(bugfile2_file,
+        jags <- do.call(rjags::jags.model, c(list(
+          file = bugfile2_file,
           data = list(
             n1 = nrow(patient_entry[!is.na(patient_entry$resp.1st), ]),
             n2 = nrow(patient_entry[!is.na(patient_entry$resp.2nd), ]),
@@ -233,14 +225,15 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
             beta1_prior.a = beta1_prior.a,
             beta1_prior.c = beta1_prior.c
           ),
-          n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, ...
-        )
+          n.chains = n_MCMC_chain, n.adapt = n.adapt, quiet = quiet, jags.model_options
+        )))
         update(jags, BURN.IN, progress.bar = progress.bar)
-        posterior_sample <- rjags::coda.samples(jags,
-          c("pi", "beta"),
-          MCMC_SAMPLE,
-          thin = thin, progress.bar = progress.bar
-        )
+        posterior_sample <- do.call(rjags::coda.samples, c(list(
+          model = jags,
+          variable.names = c("pi", "beta"),
+          n.iter = MCMC_SAMPLE,
+          thin = thin, progress.bar = progress.bar, coda.samples_options
+        )))
       },
       warning = function(war) {
         warning_count <- warning_count + 1
@@ -367,7 +360,8 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
     error_ind <- 0
     tryCatch(
       {
-        jags <- rjags::jags.model(bugfile2_file,
+        jags <- do.call(rjags::jags.model, c(list(
+          file = bugfile2_file,
           data = list(
             n = nrow(mydata),
             num_arms = NUM_ARMS,
@@ -384,13 +378,19 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
             beta1_prior.a = beta1_prior.a,
             beta1_prior.c = beta1_prior.c
           ),
-          n.chains = n_MCMC_chain, n.adapt = BURN.IN, quiet = quiet
-        )
+          n.chains = n_MCMC_chain, n.adapt = BURN.IN, quiet = quiet, jags.model_options
+        )))
         update(jags, BURN.IN, progress.bar = progress.bar)
-        posterior_sample <- rjags::coda.samples(
-          jags,
-          c("pi", "beta"),
-          MCMC_SAMPLE, progress.bar = progress.bar
+        posterior_sample <- do.call(
+          rjags::coda.samples,
+          c(list(
+            model = jags,
+            variable.names = c("pi", "beta"),
+            thin = thin,
+            n.iter = MCMC_SAMPLE,
+            progress.bar = progress.bar,
+            coda.samples_options
+          ))
         )
       },
       warning = function(war) {
