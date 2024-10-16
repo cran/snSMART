@@ -30,15 +30,13 @@
 #' summary(LPJSM_result)
 #'
 #' @references
-#' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2018. A Bayesian analysis
-#' of small n sequential multiple assignment randomized trials (snSMARTs).
-#' Statistics in medicine, 37(26), pp.3723-3732.
+#' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2018. A Bayesian analysis of small n sequential multiple assignment randomized trials (snSMARTs).
+#' Statistics in medicine, 37(26), pp.3723-3732. URL: <doi:10.1002/sim.7900>
 #'
-#' Chao, Y.C., Trachtman, H., Gipson, D.S., Spino, C., Braun, T.M. and Kidwell, K.M., 2020. Dynamic treatment regimens in small n, sequential, multiple assignment,
-#' randomized trials: An application in focal segmental glomerulosclerosis. Contemporary clinical trials, 92, p.105989.
+#' Chao, Y.C., Trachtman, H., Gipson, D.S., Spino, C., Braun, T.M. and Kidwell, K.M., 2020. Dynamic treatment regimens in small n, sequential, multiple assignment, randomized trials: An application in focal segmental glomerulosclerosis. Contemporary clinical trials, 92, p.105989. URL: <doi:10.1016/j.cct.2020.105989>
 #'
 #' Fang, F., Hochstedler, K.A., Tamura, R.N., Braun, T.M. and Kidwell, K.M., 2021. Bayesian methods to compare dose levels with placebo in a small n,
-#' sequential, multiple assignment, randomized trial. Statistics in Medicine, 40(4), pp.963-977.
+#' sequential, multiple assignment, randomized trial. Statistics in Medicine, 40(4), pp.963-977. URL: <doi:10.1002/sim.8813>
 #'
 #' @seealso
 #' \code{\link{BJSM_binary}} \cr
@@ -249,7 +247,6 @@ LPJSM_binary <- function(data, six = TRUE, DTR = TRUE, ...) {
 
 #' @rdname LPJSM_binary
 #' @param object object to summarize
-#' @param ... not currently used
 #' @export
 summary.LPJSM_binary <- function(object, ...) {
   trteff <- cbind(object$pi_hat, object$sd_pi_hat)
@@ -260,16 +257,16 @@ summary.LPJSM_binary <- function(object, ...) {
     DTRest <- t(rbind(object$pi_DTR_hat, object$pi_DTR_se))
     colnames(DTRest) <- c("Estimate", "Std. Error")
     rownames(DTRest) <- c("rep_AB", "rep_AC", "rep_BA", "rep_BC", "rep_CA", "rep_CB")
+    obj <- list(GEEresult = summary(object$GEE_output), trteff = trteff, DTRest = DTRest)
   }
 
-  obj <- list(GEEresult = summary(object$GEE_output), trteff = trteff, DTRest = DTRest)
+  obj <- list(GEEresult = summary(object$GEE_output), trteff = trteff)
   class(obj) <- "summary.LPJSM_binary"
   obj
 }
 
 #' @rdname LPJSM_binary
 #' @param object object to print
-#' @param ... not currently used
 #' @export
 #' @export print.summary.LPJSM_binary
 print.summary.LPJSM_binary <- function(x, ...) {
@@ -278,7 +275,7 @@ print.summary.LPJSM_binary <- function(x, ...) {
   cat("\nTreatment Effect Estimate:\n")
   print(x$trteff)
 
-  if (length(x) == 3) {
+  if (length(x) != 3) {
     cat("\nExpected Response Rate of Dynamic Treatment Regimens (DTR):\n")
     print(x$DTRest)
   }
@@ -287,7 +284,6 @@ print.summary.LPJSM_binary <- function(x, ...) {
 
 #' @rdname LPJSM_binary
 #' @param x object to summarize.
-#' @param ... further arguments. Not currently used.
 #' @export
 #' @export print.LPJSM_binary
 print.LPJSM_binary <- function(x, ...) {

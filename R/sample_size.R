@@ -55,13 +55,12 @@
 #' }
 #'
 #' @references
-#' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2018. A Bayesian analysis of
-#' small n sequential multiple assignment randomized trials (snSMARTs).
-#' Statistics in medicine, 37(26), pp.3723-3732.
+#' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2018. A Bayesian analysis of small n sequential multiple assignment randomized trials (snSMARTs).
+#' Statistics in medicine, 37(26), pp.3723-3732. URL: <doi:10.1002/sim.7900>
 #'
 #' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K., 2020. Sample size determination
 #' for Bayesian analysis of small n sequential, multiple assignment, randomized trials
-#' (snSMARTs) with three agents. Journal of Biopharmaceutical Statistics, 30(6), pp.1109-1120.
+#' (snSMARTs) with three agents. Journal of Biopharmaceutical Statistics, 30(6), pp.1109-1120. URL: <doi:10.1080/10543406.2020.1815032>
 #'
 #' @seealso
 # #' \code{\link{JSRM_binary}} \cr
@@ -74,14 +73,14 @@
 
 
 sample_size <- function(pi, beta1, beta0, coverage, power, mu, n, verbose = FALSE) {
-  beta_prior_generator <- function(info_level, prior_mean) {
-    alpha0 <- prior_mean * info_level
-    beta0 <- info_level * (1 - prior_mean)
-    alpha0_beta0 <- list(
-      alpha0 = alpha0,
-      beta0 = beta0
-    )
-  }
+  # beta_prior_generator <- function(info_level, prior_mean) {
+  #   alpha0 <- prior_mean * info_level
+  #   beta0 <- info_level * (1 - prior_mean)
+  #   alpha0_beta0 <- list(
+  #     alpha0 = alpha0,
+  #     beta0 = beta0
+  #   )
+  # }
 
   # cFunc[a_, b_, beta1_] = (beta1 a^2)/(a + b)
   #

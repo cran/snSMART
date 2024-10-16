@@ -115,7 +115,7 @@
 #' @references
 #' Chao, Y.C., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2020. A Bayesian group
 #' sequential small n sequential multiple‐assignment randomized trial. Journal of
-#' the Royal Statistical Society: Series C (Applied Statistics), 69(3), pp.663-680.
+#' the Royal Statistical Society: Series C (Applied Statistics), 69(3), pp.663-680. URL: <doi:10.1111/rssc.12406>
 #'
 # #' @seealso
 # #' \code{\link{sim_group_seq}}
@@ -177,13 +177,13 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
   beta1_prior_dist <- ifelse(beta1_prior_dist == "gamma", "dgamma", ifelse(beta1_prior_dist == "beta", "dbeta", "dpar"))
 
 
-  assn.stage2 <- function(i, trt, y, rand.prob) # Function that assigns the second stage treatment
-  {
-    alltrt <- 1:3
-    if (y[i] == 1) newtrt <- trt[i]
-    if (y[i] == 0) newtrt <- sample(alltrt[alltrt != trt[i]], 1, prob = rand.prob[alltrt != trt[i]])
-    return(newtrt)
-  }
+  # assn.stage2 <- function(i, trt, y, rand.prob) # Function that assigns the second stage treatment
+  # {
+  #   alltrt <- 1:3
+  #   if (y[i] == 1) newtrt <- trt[i]
+  #   if (y[i] == 0) newtrt <- sample(alltrt[alltrt != trt[i]], 1, prob = rand.prob[alltrt != trt[i]])
+  #   return(newtrt)
+  # }
 
   if (interim == TRUE) {
 
@@ -232,17 +232,6 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
           n.iter = MCMC_SAMPLE,
           thin = thin, progress.bar = progress.bar, coda.samples_options
         )))
-      },
-      warning = function(war) {
-        warning_count <- warning_count + 1
-        err_war_message <- rbind(paste("The warning ", warning_count, " is: ", war))
-      },
-      error = function(err) {
-        error_count <- error_count + 1
-        err_war_message <- rbind(paste("The error ", error_count, " is: ", err))
-        error_ind <- 1
-      },
-      finally = {
       }
     )
     out_post <- posterior_sample[[1]]
@@ -390,10 +379,6 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
             coda.samples_options
           ))
         )
-      },
-      warning = function(war) {
-        warning_count <- warning_count + 1
-        err_war_message <- rbind(paste("The warning ", warning_count, " is: ", war))
       }
     )
     out_post <- as.data.frame(posterior_sample[[1]])
@@ -485,7 +470,7 @@ group_seq <- function(data, interim = TRUE, drop_threshold_pair = NULL, prior_di
 #'    \item{Treatment Effects Estimate}{a 3 x 5 matrix with columns for the estimated treatment effects, its standard error, coverage probability of its credible interval, lower bound for its credible interval and higher bound for its credible interval}
 #'    \item{Differences between Treatments}{a 3 x 5 matrix with columns for the estimated differences in treatment effects between two treatments, its standard error, coverage probability of its credible interval, lower bound and higher bound of the credible interval}
 #'    \item{Linkage Parameter Estimate}{a 2 x 5 matrix, if the two beta model is fitted, or a 6 x 5 matrix, if the six beta model is fitted, with columns for the estimated linkage parameters}
-#'    \item{Expected Response Rate of Dynamic Treatment Regimens (DTR)}{}
+#'    \item{Expected Response Rate of Dynamic Treatment Regimens (DTR)}{only when `DTR = TRUE`}
 #' }
 #'
 #'

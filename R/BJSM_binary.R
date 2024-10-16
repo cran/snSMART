@@ -134,12 +134,12 @@
 #'
 #' @references
 #' Wei, B., Braun, T.M., Tamura, R.N. and Kidwell, K.M., 2018. A Bayesian analysis of small n sequential multiple assignment randomized trials (snSMARTs).
-#' Statistics in medicine, 37(26), pp.3723-3732.
+#' Statistics in medicine, 37(26), pp.3723-3732. URL: <doi:10.1002/sim.7900>
 #'
-#' Chao, Y.C., Trachtman, H., Gipson, D.S., Spino, C., Braun, T.M. and Kidwell, K.M., 2020. Dynamic treatment regimens in small n, sequential, multiple assignment, randomized trials: An application in focal segmental glomerulosclerosis. Contemporary clinical trials, 92, p.105989.
+#' Chao, Y.C., Trachtman, H., Gipson, D.S., Spino, C., Braun, T.M. and Kidwell, K.M., 2020. Dynamic treatment regimens in small n, sequential, multiple assignment, randomized trials: An application in focal segmental glomerulosclerosis. Contemporary clinical trials, 92, p.105989. URL: <doi:10.1016/j.cct.2020.105989>
 #'
 #' Fang, F., Hochstedler, K.A., Tamura, R.N., Braun, T.M. and Kidwell, K.M., 2021. Bayesian methods to compare dose levels with placebo in a small n,
-#' sequential, multiple assignment, randomized trial. Statistics in Medicine, 40(4), pp.963-977.
+#' sequential, multiple assignment, randomized trial. Statistics in Medicine, 40(4), pp.963-977. URL: <doi:10.1002/sim.8813>
 #'
 #' @seealso
 #' \code{\link{LPJSM_binary}} \cr
@@ -148,7 +148,7 @@
 #' @rdname BJSM_binary
 #' @export
 
-BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MCMC_chain, n.adapt, BURN.IN = 100,
+BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MCMC_chain = 1, n.adapt, BURN.IN = 100,
                         thin = 1, MCMC_SAMPLE, ci = 0.95, six = TRUE, DTR = TRUE,
                         jags.model_options = NULL, coda.samples_options = NULL, verbose = FALSE, ...) {
   quiet <- FALSE
@@ -548,7 +548,7 @@ BJSM_binary <- function(data, prior_dist, pi_prior, normal.par, beta_prior, n_MC
 #'    \item{Treatment Effects Estimate}{a 3 x 5 matrix with columns for the estimated treatment effects, its standard error, coverage probability of its credible interval, lower bound for its credible interval and higher bound for its credible interval}
 #'    \item{Differences between Treatments}{a 3 x 5 matrix with columns for the estimated differences in treatment effects between two treatments, its standard error, coverage probability of its credible interval, lower bound and higher bound of the credible interval}
 #'    \item{Linkage Parameter Estimate}{a 2 x 5 matrix, if the two beta model is fitted, or a 6 x 5 matrix, if the six beta model is fitted, with columns for the estimated linkage parameters}
-#'    \item{Expected Response Rate of Dynamic Treatment Regimens (DTR)}{}
+#'    \item{Expected Response Rate of Dynamic Treatment Regimens (DTR)}{only when `DTR = TRUE`}
 #' }
 #'
 #'
